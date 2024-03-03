@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "bs58": "^5.0.0",
+    "decimal.js": "^10.4.3",
+    "node-cron": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.5",
+    "npm-check-updates": "^16.14.11"
+  },
+  "name": "solana-toolkit",
+  "version": "0.1.0",
+  "description": "Solana Toolkit is a set of helpers for Solana JavaScript SDK.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grandima/solana-toolkit.git"
+  },
+  "private": false
+}
