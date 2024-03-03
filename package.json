@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@solana/spl-token": "^0.4.1",
     "bs58": "^5.0.0",
     "decimal.js": "^10.4.3",
     "node-cron": "^3.0.3",
