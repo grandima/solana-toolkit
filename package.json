@@ -1,10 +1,14 @@
 {
   "dependencies": {
+    "@metaplex-foundation/js": "^0.20.1",
+    "@metaplex-foundation/mpl-candy-machine": "^6.0.1",
     "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
+    "@metaplex-foundation/umi": "^0.9.1",
     "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
     "@raydium-io/raydium-sdk": "^1.3.1-beta.50",
     "@solana/spl-token": "^0.4.1",
     "@types/mime": "^3.0.4",
+    "@types/node-cron": "^3.0.11",
     "bs58": "^5.0.0",
     "decimal.js": "^10.4.3",
     "nft.storage": "^7.1.1",

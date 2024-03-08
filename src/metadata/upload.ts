@@ -60,7 +60,7 @@ export async function getMetadata(imagePath: string, jsonPath: string, shouldSto
 // Don't forget to actually call the main function!
 // We can't `await` things at the top level, so this adds
 // a .catch() to grab any errors and print them to the console.
-// getMetadata()
+// getMetadata('a', 'b')
 //   .catch(err => {
 //     console.error(err)
 //     process.exit(1)

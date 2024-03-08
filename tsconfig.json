@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
+    "moduleResolution": "node",
     "outDir": "./js",
     "strict": true,
     "esModuleInterop": true,
@@ -10,10 +11,10 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "rootDir": "src",
-    "composite": true
+    "rootDir": ".",
+    "composite": true,
   },
   "exclude": [
     "otherCode"
-  ]
+  ],
 }
