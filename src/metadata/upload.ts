@@ -38,20 +38,20 @@ async function metadataJSON(jsonPath: string): Promise<Object> {
   return JSON.parse(await fs.promises.readFile(jsonPath))
 }
 // 'metadata/picture.png'
-export async function getMetadata(imagePath: string, jsonPath: string, shouldStoreNFT = false) {
+export async function getMetadata(imagePath: string, jsonPath: string, shouldUploadImage = false) {
   const image = await fileFromPath(imagePath)
-  if (shouldStoreNFT) {
+  if (shouldUploadImage) {
     const imageResult = await storeNFT(image)
   }
   const desc = await metadataJSON(jsonPath)
 
-  if (shouldStoreNFT) {
+  if (shouldUploadImage) {
     // @ts-ignore
     desc['image'] = 'https://' + imageResult + '.ipfs.nftstorage.link/'
   }
 
   const metadataResult = await storeNFT(new Blob([JSON.stringify(desc)]))
-  if (shouldStoreNFT) {
+  if (shouldUploadImage) {
     return {'link': 'https://' + metadataResult + '.ipfs.nftstorage.link/', 'json': desc}
   }
   return {'json': desc}

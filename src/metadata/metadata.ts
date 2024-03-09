@@ -9,7 +9,7 @@ import { base58 } from '@metaplex-foundation/umi/serializers'
 export async function updateMetadata(connection: Connection, superWallet: Keypair, mint: PublicKey, imagePath: string, jsonPath: string) {
   const umi = createUmi(connection.rpcEndpoint);
   const userWallet = umi.eddsa.createKeypairFromSecretKey(superWallet.secretKey)
-  const data = await getMetadata(jsonPath, imagePath)
+  const data = await getMetadata(imagePath, jsonPath)
   const json = data['json']
   const metadata = {
     // @ts-ignore

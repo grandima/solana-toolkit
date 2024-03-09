@@ -1,6 +1,14 @@
 import { Keypair } from '@solana/web3.js'
 import fs from 'fs'
 
+export async function saveKeypair(keypair: Keypair, path: string) {
+  const secret_array = keypair.secretKey
+    .toString()
+    .split(',')
+    .map(value=>Number(value));
+  const secret = JSON.stringify(secret_array);
+  await fs.promises.writeFile(path, secret, 'utf8');
+}
 export async function loadKeyFrom(path: string) {
   return Keypair.fromSecretKey(new Uint8Array(JSON.parse(await fs.promises.readFile(path, 'utf8'))))
 }

@@ -19,6 +19,7 @@ export async function createToken(connection: Connection, superWallet: Keypair, 
         {maxRetries: 100},
         TOKEN_PROGRAM_ID,
       )
+      console.log('New mint: ' + mintAddress)
     } catch (e) {
       console.log(e)
       await sleepTime(sleep)

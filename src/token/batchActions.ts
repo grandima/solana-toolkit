@@ -5,29 +5,51 @@ import {
   TransactionInstruction
 } from '@solana/web3.js'
 import {
-  Account,
+  Account, ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferInstruction,
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddressSync
 } from '@solana/spl-token'
 
 import { promises as fs } from 'fs'
 import { safeGetOrCreateAssociatedTokenAccount } from './mintAuthority'
-import { getLatestDirNumber } from '../utils/fileMethods'
-import { loadKeys } from '../utils/keypair'
+import { getLatestDirNumber } from '../utils'
+import { loadKeys } from '../utils'
+import { TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk'
 
-async function createInstructionToSendTokens(connection: Connection, sourceAccount: Account, rawAmount: number, destination: PublicKey, mint: PublicKey, wallet: Keypair) {
+function createInstructionToSendTokens(connection: Connection, sourceTokenAccount: Account, rawAmount: number, destinationTokenAccount: PublicKey, mint: PublicKey, wallet: Keypair) {
   //Step 1
-  let destinationAccount = await safeGetOrCreateAssociatedTokenAccount(
-    connection,
-    wallet,
-    mint,
-    destination
-  );
   return createTransferInstruction(
-    sourceAccount.address,
-    destinationAccount.address,
+    sourceTokenAccount.address,
+    destinationTokenAccount,
     wallet.publicKey,
     rawAmount
   )
+}
+
+function createTokenAccountInstruction(connection: Connection, mint: PublicKey, payer: PublicKey, owner: PublicKey):
+  {associatedAccount: PublicKey, instruction: TransactionInstruction} {
+    const associatedAccount = getAssociatedTokenAddressSync(
+      mint,
+      owner,
+      false,
+      TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    )
+    return {associatedAccount: associatedAccount, instruction: createAssociatedTokenAccountInstruction(
+      payer,
+      associatedAccount,
+      owner,
+      mint,
+      TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    )}
+}
+
+function batchCreateTokenAccountsAndInstructions(connection: Connection, mint: PublicKey, payer: PublicKey, accounts: PublicKey[]) {
+  return accounts.map(owner => {
+    return createTokenAccountInstruction(connection, mint, payer, owner)
+  })
 }
 
 function splitNumbers(total: number, length: number): number[] {
@@ -63,9 +85,8 @@ export async function batchInstructions(connection: Connection, mint: PublicKey,
     mint,
     wallet.publicKey,
   )
-  let instructions = [] as TransactionInstruction[]
-  for (let i = 0; i < keypairs.length; i++) {
-    instructions.push(await createInstructionToSendTokens(connection, tokenAccount, amounts[i], keypairs[i].publicKey, mint, wallet))
-  }
-  return { amounts,instructions }
+  let tokenAccountsAndInstructions = batchCreateTokenAccountsAndInstructions(connection, mint, wallet.publicKey, keypairs.map(keypair => {return keypair.publicKey}))
+  // return { amounts, instructions: [...tokenAccountsAndInstructions, tokenAccountsAndInstructions.map(data)] }
+  return { amounts, instructions: [...tokenAccountsAndInstructions.map(data => data.instruction), ...tokenAccountsAndInstructions.map(data => createInstructionToSendTokens(connection, tokenAccount, rawAmountToSplit, data.associatedAccount, mint, wallet))] }
 }
+
