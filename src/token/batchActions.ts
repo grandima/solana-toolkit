@@ -8,19 +8,20 @@ import {
   Account, ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferInstruction,
   createAssociatedTokenAccountInstruction,
-  getAssociatedTokenAddressSync
+  getAssociatedTokenAddressSync, createAssociatedTokenAccount
 } from '@solana/spl-token'
 
 import { promises as fs } from 'fs'
-import { safeGetOrCreateAssociatedTokenAccount } from './mintAuthority'
+import { myGetOrCreateAssociatedTokenAccount, safeGetOrCreateAssociatedTokenAccount } from './mintAuthority'
 import { getLatestDirNumber } from '../utils'
 import { loadKeys } from '../utils'
 import { TOKEN_PROGRAM_ID } from '@raydium-io/raydium-sdk'
+import { repeatTx } from '../utils/getTransaction'
 
-function createInstructionToSendTokens(connection: Connection, sourceTokenAccount: Account, rawAmount: number, destinationTokenAccount: PublicKey, mint: PublicKey, wallet: Keypair) {
+function createInstructionToSendTokens(connection: Connection, sourceTokenAccount: PublicKey, rawAmount: number, destinationTokenAccount: PublicKey, mint: PublicKey, wallet: Keypair) {
   //Step 1
   return createTransferInstruction(
-    sourceTokenAccount.address,
+    sourceTokenAccount,
     destinationTokenAccount,
     wallet.publicKey,
     rawAmount
@@ -72,6 +73,7 @@ function splitNumbers(total: number, length: number): number[] {
 }
 
 //'wallets/'
+
 export async function batchInstructions(connection: Connection, mint: PublicKey, rawAmountToSplit: number, startPath: string, wallet: Keypair):
   Promise<{amounts: number[], instructions: TransactionInstruction[]}> {
   const path = startPath + '/' + getLatestDirNumber(startPath) + '/' + mint
@@ -79,14 +81,11 @@ export async function batchInstructions(connection: Connection, mint: PublicKey,
   const amounts = splitNumbers(rawAmountToSplit, keypairs.length)
   await fs.writeFile(path + '/adjusted_amounts.json', JSON.stringify(amounts))
 
-  let tokenAccount = await safeGetOrCreateAssociatedTokenAccount(
-    connection,
-    wallet,
-    mint,
-    wallet.publicKey,
-  )
+  const associatedAccount = (await myGetOrCreateAssociatedTokenAccount(connection, wallet, mint, wallet.publicKey)).address
+
   let tokenAccountsAndInstructions = batchCreateTokenAccountsAndInstructions(connection, mint, wallet.publicKey, keypairs.map(keypair => {return keypair.publicKey}))
+  console.log ('Created token accounts tx: ' + await repeatTx(connection, tokenAccountsAndInstructions.map(data => data.instruction), [wallet], 1850000))
   // return { amounts, instructions: [...tokenAccountsAndInstructions, tokenAccountsAndInstructions.map(data)] }
-  return { amounts, instructions: [...tokenAccountsAndInstructions.map(data => data.instruction), ...tokenAccountsAndInstructions.map(data => createInstructionToSendTokens(connection, tokenAccount, rawAmountToSplit, data.associatedAccount, mint, wallet))] }
+  return { amounts, instructions: [ ...tokenAccountsAndInstructions.map((data, index) => createInstructionToSendTokens(connection, associatedAccount, amounts[index], data.associatedAccount, mint, wallet))] }
 }
 

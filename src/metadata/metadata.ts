@@ -1,10 +1,11 @@
-import { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import { ComputeBudgetProgram, Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
 import { getMetadata } from './upload'
-import { createSignerFromKeypair } from '@metaplex-foundation/umi'
-import { fromWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters'
+import { createSignerFromKeypair, HasWrappedInstructions } from '@metaplex-foundation/umi'
+import { fromWeb3JsInstruction, fromWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters'
 import { createMetadataAccountV3 } from '@metaplex-foundation/mpl-token-metadata'
 import { base58 } from '@metaplex-foundation/umi/serializers'
+import { WrappedInstruction } from '@metaplex-foundation/umi/src/Instruction'
 
 export async function updateMetadata(connection: Connection, superWallet: Keypair, mint: PublicKey, imagePath: string, jsonPath: string) {
   const umi = createUmi(connection.rpcEndpoint);
@@ -46,6 +47,18 @@ export async function updateMetadata(connection: Connection, superWallet: Keypai
     umi,
     CreateMetadataAccountV3Args
   )
+instruction.add([
+  {
+    instruction: fromWeb3JsInstruction(ComputeBudgetProgram.setComputeUnitLimit({units: 18500})),
+    signers: [signer],
+    bytesCreatedOnChain: 0
+  },
+  {
+    instruction: fromWeb3JsInstruction(ComputeBudgetProgram.setComputeUnitPrice({microLamports: 2000688})),
+    signers: [signer],
+    bytesCreatedOnChain: 0
+  }
+])
   const transaction = await instruction.buildAndSign(umi);
   const transactionSignature = await umi.rpc.sendTransaction(transaction, {skipPreflight: true, maxRetries: 100});
   const signature = base58.deserialize(transactionSignature)
