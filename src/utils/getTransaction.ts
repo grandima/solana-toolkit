@@ -59,8 +59,8 @@ export async function solanaRepeatTx(connection: Connection, instructions: Trans
 export async function repeatTx(connection: Connection, instructions: TransactionInstruction[], signers: Signer[], CULimit = 389326, CUPrice = 770562, retries = 30, sleep = 1000, skipPreflight = false) {
   let result = false
   let txId: string = undefined!
-  // instructions.unshift(ComputeBudgetProgram.setComputeUnitLimit({units: CULimit}))
-  // instructions.unshift(ComputeBudgetProgram.setComputeUnitPrice({microLamports: CUPrice}))
+  instructions.unshift(ComputeBudgetProgram.setComputeUnitLimit({units: CULimit}))
+  instructions.unshift(ComputeBudgetProgram.setComputeUnitPrice({microLamports: CUPrice}))
   while (!result) {
     let blockhash: string = undefined!
     while (blockhash === undefined)

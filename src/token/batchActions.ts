@@ -8,7 +8,7 @@ import {
   Account, ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferInstruction,
   createAssociatedTokenAccountInstruction,
-  getAssociatedTokenAddressSync, createAssociatedTokenAccount
+  getAssociatedTokenAddressSync, createAssociatedTokenAccount, getOrCreateAssociatedTokenAccount
 } from '@solana/spl-token'
 
 import { promises as fs } from 'fs'
@@ -83,7 +83,11 @@ export async function batchInstructions(connection: Connection, mint: PublicKey,
 
   const associatedAccount = (await myGetOrCreateAssociatedTokenAccount(connection, wallet, mint, wallet.publicKey)).address
 
-  let tokenAccountsAndInstructions = batchCreateTokenAccountsAndInstructions(connection, mint, wallet.publicKey, keypairs.map(keypair => {return keypair.publicKey}))
+  let tokenAccountsAndInstructions = keypairs
+    .map(owner => {
+      return createTokenAccountInstruction(connection, mint, wallet.publicKey, owner.publicKey)
+    })
+
   console.log ('Created token accounts tx: ' + await repeatTx(connection, tokenAccountsAndInstructions.map(data => data.instruction), [wallet], 1850000))
   // return { amounts, instructions: [...tokenAccountsAndInstructions, tokenAccountsAndInstructions.map(data)] }
   return { amounts, instructions: [ ...tokenAccountsAndInstructions.map((data, index) => createInstructionToSendTokens(connection, associatedAccount, amounts[index], data.associatedAccount, mint, wallet))] }
