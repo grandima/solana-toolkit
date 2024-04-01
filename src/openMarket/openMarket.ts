@@ -2,9 +2,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  sendAndConfirmTransaction,
   SystemProgram,
-  Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
 import { useRentExemption } from './utils/useRentExemption'
@@ -14,8 +12,8 @@ import { getVaultOwnerAndNonce } from './utils/serum'
 import { TOKEN_PROGRAM_ID, Token } from '@raydium-io/raydium-sdk'
 import { DexInstructions, Market } from '@project-serum/serum'
 import { BN } from 'bn.js'
-import { getLatestDirNumber, writeFile } from '../../../solana-toolkit/src/utils/fileMethods'
-import { repeatTx } from '../../../solana-toolkit/src/utils/getTransaction'
+import { getLatestDirNumber, writeFile } from '../utils'
+import { repeatTx } from '../utils'
 
 const OPENBOOK_DEX = "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"; // openbook now
 const programID = new PublicKey(OPENBOOK_DEX)
