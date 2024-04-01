@@ -28,6 +28,11 @@ export async function getNewFileName(directory: string){
 }
 
 export async function writeFile(data: string, path: string) {
+  try {
+    await fs.promises.access(path)
+    await fs.promises.unlink(path)
+  } catch (_) {
+  }
   await fs.promises.writeFile(path, data)
 }
 

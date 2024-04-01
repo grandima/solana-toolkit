@@ -1,4 +1,5 @@
 import {
+  Connection,
   Keypair,
   PublicKey,
   sendAndConfirmTransaction,
@@ -10,16 +11,15 @@ import { useRentExemption } from './utils/useRentExemption'
 import { ACCOUNT_SIZE, createInitializeAccountInstruction } from '@solana/spl-token'
 import { useSerumMarketAccountSizes } from './utils/useSerumMarketAccountSizes'
 import { getVaultOwnerAndNonce } from './utils/serum'
-import { connection, superWallet, TRADE_INFO } from '../../config'
 import { TOKEN_PROGRAM_ID, Token } from '@raydium-io/raydium-sdk'
 import { DexInstructions, Market } from '@project-serum/serum'
 import { BN } from 'bn.js'
 import { getLatestDirNumber, writeFile } from '../../../solana-toolkit/src/utils/fileMethods'
 import { repeatTx } from '../../../solana-toolkit/src/utils/getTransaction'
 
-export const OPENBOOK_DEX = "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"; // openbook now
-export const programID = new PublicKey(OPENBOOK_DEX)
-export async function createOpenMarket(wallet = superWallet, basetToken = TRADE_INFO.token, quoteToken = Token.WSOL, eventQueueLength = 128, requestQueueLength = 1, orderbookLength = 201) {
+const OPENBOOK_DEX = "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"; // openbook now
+const programID = new PublicKey(OPENBOOK_DEX)
+export async function createOpenMarket(connection: Connection, wallet: Keypair, basetToken: Token, quoteToken: Token, eventQueueLength = 128, requestQueueLength = 1, orderbookLength = 201) {
 
   const {lotSize, tickSize}  = {lotSize: 1, tickSize: 1}
   const mintRent = await useRentExemption(0);
@@ -204,11 +204,8 @@ export async function createOpenMarket(wallet = superWallet, basetToken = TRADE_
   );
 
   console.log('Vaults created: ' + (await repeatTx(connection, vaultInstructions, [wallet, ...vaultSigners])))
-
-
   console.log('Market created: ' + (await repeatTx(connection, marketInstructions, [wallet, ...marketSigners])))
-  TRADE_INFO.openMarketAddress = marketAccounts.market.publicKey
   const number = getLatestDirNumber('wallets')
-  await writeFile(marketAccounts.market.publicKey.toString(), 'wallets/' + number + '/' + TRADE_INFO.token.mint.toString() + '/marketId.json')
+  await writeFile(marketAccounts.market.publicKey.toString(), 'wallets/' + number + '/' + basetToken.toString() + '/marketId.json')
   return marketAccounts.market.publicKey
 }
