@@ -34,4 +34,29 @@ export async function createToken(connection: Connection, superWallet: Keypair, 
   } while (!mintAddress)
   return mintAddress
 }
-
+export async function createAndMint(connection: Connection, superWallet: Keypair, decimals: number, mintAmount: number, sleep = 100) {
+  let mintAddress: PublicKey | undefined
+  do {
+    try {
+      const keypair = Keypair.generate()
+      const lamports = await getMinimumBalanceForRentExemptMint(connection);
+      const instructions = [
+        SystemProgram.createAccount({
+          fromPubkey: superWallet.publicKey,
+          newAccountPubkey: keypair.publicKey,
+          space: MINT_SIZE,
+          lamports,
+          programId: TOKEN_PROGRAM_ID,
+        }),
+        createInitializeMint2Instruction(keypair.publicKey, decimals, superWallet.publicKey, null, TOKEN_PROGRAM_ID)
+      ]
+      await repeatTx(connection, instructions, [superWallet, keypair])
+      mintAddress = keypair.publicKey
+      console.log('New mint: ' + keypair.publicKey)
+    } catch (e) {
+      console.log(e)
+      await sleepTime(sleep)
+    }
+  } while (!mintAddress)
+  return mintAddress
+}
