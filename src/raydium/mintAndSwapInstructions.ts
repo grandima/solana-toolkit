@@ -3,42 +3,44 @@ import { LiquidityPoolKeys, Token, TokenAccount, TokenAmount, TxVersion } from '
 import { Connection, PublicKey } from '@solana/web3.js'
 import { makeSwapInstructionSimple } from './swapAMMSync'
 
-export const makeTxVersion = TxVersion.V0;
+const makeTxVersion = TxVersion.V0;
 
-export const mintAndSwapInstructions = async (
-  connection: Connection,
-  poolKeys: LiquidityPoolKeys,
-  baseToken: Token,
-  leftAmount: number,
-  quoteToken: Token,
-  masterWalletTokenAccounts: TokenAccount[],
-  tokenAccount: PublicKey,
-  authority: PublicKey,
+export const createMintAndSwapInstructions = async (
   sellInfo: {
+    connection: Connection,
+    poolKeys: LiquidityPoolKeys,
+    amount: number,
+    masterWalletTokenAccounts: TokenAccount[],
+    baseToken: Token,
+    quoteToken: Token,
+  },
+  mintInfo: {
     token: Token,
+    tokenAccount: PublicKey,
+    authority: PublicKey,
     amount: number
   }
   ) => {
   const sellInstructions = (await makeSwapInstructionSimple({
-    connection,
-    poolKeys,
+    connection: sellInfo.connection,
+    poolKeys: sellInfo.poolKeys,
     userKeys: {
-      tokenAccounts: masterWalletTokenAccounts,
-      owner: authority,
+      tokenAccounts: sellInfo.masterWalletTokenAccounts,
+      owner: mintInfo.authority,
     },
-    amountIn: new TokenAmount(baseToken, leftAmount),
+    amountIn: new TokenAmount(sellInfo.baseToken, sellInfo.amount),
     //TODO: figure out what should be this amountOut
-    amountOut: new TokenAmount(quoteToken, 0.002 * (10 ** quoteToken.decimals)),
+    amountOut: new TokenAmount(sellInfo.quoteToken, 0.002 * (10 ** sellInfo.quoteToken.decimals)),
     fixedSide: 'in',
     makeTxVersion,
   }))
     .innerTransactions[0]
   const mintInstruction = createMintToCheckedInstruction(
-    sellInfo.token.mint,
-    tokenAccount,
-    authority,
-    sellInfo.amount,
-    sellInfo.token.decimals
+    mintInfo.token.mint,
+    mintInfo.tokenAccount,
+    mintInfo.authority,
+    mintInfo.amount,
+    mintInfo.token.decimals
   )
   sellInstructions.instructions.unshift(mintInstruction)
   return sellInstructions
